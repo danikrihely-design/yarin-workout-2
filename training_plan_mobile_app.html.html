@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>תוכנית אימונים A/B</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-2: #f1f4f9;
+      --border: #e4e8f0;
+      --text: #18212f;
+      --muted: #6b7688;
+      --primary: #1f6fff;
+      --primary-soft: #e9f1ff;
+      --success: #18a957;
+      --success-soft: #eaf9f0;
+      --shadow: 0 10px 30px rgba(24, 33, 47, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #f9fbff 0%, #f4f6fb 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Heebo", Arial, sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      padding: 0 0 calc(22px + env(safe-area-inset-bottom));
+    }
+
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 18px 14px 30px;
+    }
+
+    .hero {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 20px 18px;
+      margin-bottom: 14px;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .badge {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid #d8e6ff;
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .next-workout {
+      background: linear-gradient(135deg, #f7fbff 0%, #edf4ff 100%);
+      border: 1px solid #dbe7ff;
+      border-radius: 22px;
+      padding: 16px;
+    }
+
+    .section-kicker {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .next-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .next-sub {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 14px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button, .ghost-link {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .primary-btn, .secondary-btn, .tab {
+      min-height: 50px;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .primary-btn {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 16px;
+      padding: 0 18px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(31, 111, 255, 0.24);
+      flex: 1 1 180px;
+    }
+
+    .secondary-btn {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0 18px;
+      font-weight: 700;
+      flex: 1 1 160px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .tab {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      color: var(--muted);
+      font-weight: 800;
+      padding: 12px 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--primary);
+      border-color: #dbe7ff;
+      box-shadow: var(--shadow);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .day-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .day-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .day-letter {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 1.4rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .day-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin: 0 0 3px;
+    }
+
+    .day-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .pill {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .exercise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .exercise {
+      background: #fbfcfe;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .num {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .exercise-body { flex: 1; min-width: 0; }
+
+    .exercise-name {
+      font-weight: 800;
+      font-size: 0.98rem;
+      margin-bottom: 4px;
+    }
+
+    .exercise-note {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .sets {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 7px 10px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+      direction: ltr;
+      align-self: center;
+    }
+
+    .section-title {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 800;
+      margin: 2px 0 10px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-card {
+      background: #fbfcfe;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .mini-value {
+      font-size: 1.02rem;
+      font-weight: 800;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .info-row {
+      background: #fbfcfe;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .info-row strong { color: var(--text); }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: 16px;
+      background: #fbfcfe;
+      border: 1px solid var(--border);
+    }
+
+    .timeline-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--success);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .timeline-title {
+      font-weight: 800;
+      font-size: 0.94rem;
+      margin-bottom: 2px;
+    }
+
+    .timeline-sub {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 16px;
+      font-size: 0.92rem;
+    }
+
+    .toast {
+      position: fixed;
+      right: 14px;
+      left: 14px;
+      bottom: 14px;
+      background: #111827;
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 16px;
+      text-align: center;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: 0.25s ease;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 560px) {
+      .app { padding: 12px 12px 28px; }
+      .hero { padding: 16px; border-radius: 24px; }
+      .hero-top, .day-head { flex-direction: column; align-items: stretch; }
+      .tabs { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .exercise { align-items: stretch; }
+      .sets { align-self: flex-start; }
+      .action-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>תוכנית אימונים A/B</h1>
+          <p>גרסה נקייה ונוחה למובייל — לפתיחה ב־Chrome בטלפון</p>
+        </div>
+        <div class="badge">3 אימונים בשבוע</div>
+      </div>
+
+      <div class="next-workout">
+        <div class="section-kicker">מה עושים עכשיו</div>
+        <div id="nextWorkoutTitle" class="next-title">האימון הבא: יום A</div>
+        <div id="nextWorkoutSub" class="next-sub">אם עדיין לא בוצע אימון — מתחילים ביום A.</div>
+        <div class="action-row">
+          <button class="primary-btn" type="button" onclick="completeWorkout()">סיימתי אימון</button>
+          <button class="secondary-btn" type="button" onclick="openPanel('log')">פתחי יומן אימונים</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <button class="tab active" type="button" data-panel="a" onclick="openPanel('a')">יום A</button>
+      <button class="tab" type="button" data-panel="b" onclick="openPanel('b')">יום B</button>
+      <button class="tab" type="button" data-panel="log" onclick="openPanel('log')">יומן ומידע</button>
+    </div>
+
+    <section id="panel-a" class="panel active">
+      <div class="card">
+        <div class="day-head">
+          <div class="day-main">
+            <div class="day-letter">A</div>
+            <div>
+              <h2 class="day-title">רגליים + ישבן</h2>
+              <p class="day-sub">האימון של הכוח והבסיס</p>
+            </div>
+          </div>
+          <div class="pill">כ־45 דקות</div>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise">
+            <div class="num">1</div>
+            <div class="exercise-body">
+              <div class="exercise-name">סקוואט — מוט בלבד</div>
+              <div class="exercise-note">גב ישר, שליטה בירידה, עומק נוח ומלא.</div>
+            </div>
+            <div class="sets">4 × 10</div>
+          </div>
+
+          <div class="exercise">
+            <div class="num">2</div>
+            <div class="exercise-body">
+              <div class="exercise-name">היפ טראסט</div>
+              <div class="exercise-note">כיווץ חזק למעלה, ירידה איטית ומבוקרת.</div>
+            </div>
+            <div class="sets">4 × 12</div>
+          </div>
+
+          <div class="exercise">
+            <div class="num">3</div>
+            <div class="exercise-body">
+              <div class="exercise-name">Romanian Deadlift — מוט בלבד</div>
+              <div class="exercise-note">להרגיש מתיחה בירך אחורית, גב ניטרלי כל הדרך.</div>
+            </div>
+            <div class="sets">3 × 12</div>
+          </div>
+
+          <div class="exercise">
+            <div class="num">4</div>
+            <div class="exercise-body">
+              <div class="exercise-name">לאנג׳</div>
+              <div class="exercise-note">צעד ארוך ויציב, שליטה בכל חזרה.</div>
+            </div>
+            <div class="sets">3 × 10 לרגל</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-b" class="panel">
+      <div class="card">
+        <div class="day-head">
+          <div class="day-main">
+            <div class="day-letter">B</div>
+            <div>
+              <h2 class="day-title">גב + חזה + כתפיים</h2>
+              <p class="day-sub">אימון גוף עליון מסודר ופשוט</p>
+            </div>
+          </div>
+          <div class="pill">כ־45 דקות</div>
+        </div>
+
+        <div class="section-title">גב</div>
+        <div class="exercise-list">
+          <div class="exercise">
+            <div class="num">1</div>
+            <div class="exercise-body">
+              <div class="exercise-name">Lat Pulldown — משיכה לחזה</div>
+              <div class="exercise-note">למשוך עם המרפקים, לא רק עם כפות הידיים.</div>
+            </div>
+            <div class="sets">4 × 10</div>
+          </div>
+
+          <div class="exercise">
+            <div class="num">2</div>
+            <div class="exercise-body">
+              <div class="exercise-name">חתירה ישובה — מכונת כבל</div>
+              <div class="exercise-note">שכמות נסגרות בסוף התנועה, גב יציב.</div>
+            </div>
+            <div class="sets">3 × 10</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:12px;">חזה וכתפיים</div>
+        <div class="exercise-list">
+          <div class="exercise">
+            <div class="num">3</div>
+            <div class="exercise-body">
+              <div class="exercise-name">לחיצת חזה — מכונה</div>
+              <div class="exercise-note">ירידה נשלטת, דחיפה חלקה ומלאה.</div>
+            </div>
+            <div class="sets">4 × 10</div>
+          </div>
+
+          <div class="exercise">
+            <div class="num">4</div>
+            <div class="exercise-body">
+              <div class="exercise-name">לחיצת כתפיים — משקולות בודדות</div>
+              <div class="exercise-note">תנועה יציבה בלי לנעול מרפקים למעלה.</div>
+            </div>
+            <div class="sets">3 × 10</div>
+          </div>
+
+          <div class="exercise">
+            <div class="num">5</div>
+            <div class="exercise-body">
+              <div class="exercise-name">הרמות צד — משקולות בודדות קלות</div>
+              <div class="exercise-note">מרפק מעט כפוף, עד גובה כתף.</div>
+            </div>
+            <div class="sets">3 × 15</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-log" class="panel">
+      <div class="card">
+        <div class="section-kicker">מעקב</div>
+        <h2 class="day-title" style="margin-bottom:12px;">יומן ומידע</h2>
+
+        <div class="grid-2">
+          <div class="mini-card">
+            <div class="mini-label">חלבון יומי</div>
+            <div class="mini-value">120 גרם ביום — אידאלי</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">אימון אחרון</div>
+            <div id="lastWorkout" class="mini-value">עדיין לא בוצע</div>
+          </div>
+        </div>
+
+        <div class="info-list" style="margin-top:10px;">
+          <div class="info-row"><strong>מנוחה:</strong> לפחות יום מנוחה בין אימון לאימון.</div>
+          <div class="info-row"><strong>התקדמות:</strong> כשכל הסטים מרגישים טוב — אפשר להוסיף משקל.</div>
+          <div class="info-row"><strong>רישום:</strong> מומלץ לשמור משקלים, סטים וחזרות אחרי כל אימון.</div>
+        </div>
+
+        <div class="section-title" style="margin-top:16px;">3 האימונים האחרונים</div>
+        <div id="history" class="timeline"></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'training_ab_mobile_v3';
+    const defaultState = {
+      nextWorkout: 'A',
+      totalCompleted: 0,
+      lastCompletedAt: null,
+      lastCompletedWorkout: null,
+      history: []
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { ...defaultState };
+        return { ...defaultState, ...JSON.parse(raw) };
+      } catch (e) {
+        return { ...defaultState };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+
+    function formatDate(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      return new Intl.DateTimeFormat('he-IL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    function workoutTitle(key) {
+      return key === 'A' ? 'יום A — רגליים וישבן' : 'יום B — גב, חזה וכתפיים';
+    }
+
+    function renderTop() {
+      const nextTitle = document.getElementById('nextWorkoutTitle');
+      const nextSub = document.getElementById('nextWorkoutSub');
+      const lastWorkout = document.getElementById('lastWorkout');
+
+      nextTitle.textContent = 'האימון הבא: ' + workoutTitle(state.nextWorkout);
+
+      if (state.lastCompletedAt && state.lastCompletedWorkout) {
+        nextSub.textContent = 'האימון האחרון היה ' + state.lastCompletedWorkout + ' בתאריך ' + formatDate(state.lastCompletedAt);
+        lastWorkout.textContent = state.lastCompletedWorkout + ' • ' + formatDate(state.lastCompletedAt);
+      } else {
+        nextSub.textContent = 'אם עדיין לא בוצע אימון — מתחילים ביום A.';
+        lastWorkout.textContent = 'עדיין לא בוצע';
+      }
+    }
+
+    function renderHistory() {
+      const wrap = document.getElementById('history');
+      if (!state.history.length) {
+        wrap.innerHTML = '<div class="empty">עדיין אין אימונים שמורים ביומן.</div>';
+        return;
+      }
+
+      wrap.innerHTML = state.history.slice(0, 3).map(item => `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div>
+            <div class="timeline-title">${item.workout}</div>
+            <div class="timeline-sub">${formatDate(item.date)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAll() {
+      renderTop();
+      renderHistory();
+    }
+
+    function openPanel(name) {
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      const activeTab = document.querySelector(`.tab[data-panel="${name}"]`);
+      if (activeTab) activeTab.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function completeWorkout() {
+      const completedWorkout = state.nextWorkout === 'A' ? 'יום A' : 'יום B';
+      const now = new Date().toISOString();
+
+      state.lastCompletedWorkout = completedWorkout;
+      state.lastCompletedAt = now;
+      state.totalCompleted += 1;
+      state.history.unshift({ workout: completedWorkout, date: now });
+      state.history = state.history.slice(0, 10);
+      state.nextWorkout = state.nextWorkout === 'A' ? 'B' : 'A';
+
+      saveState();
+      renderAll();
+      openPanel('log');
+      showToast('נשמר: ' + completedWorkout + ' הושלם');
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
